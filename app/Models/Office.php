@@ -18,11 +18,11 @@ class Office extends Model
     const APPROVAL_REJECTED = 3;
 
     protected $casts = [
-        'lat' => 'decimal',
-        'lng' => 'decimal',
-        'approval_status' => 'integer',
-        'hidden' => 'bool',
-        'price_per_day' => 'integer',
+        'lat'              => 'decimal:8',
+        'lng'              => 'decimal:8',
+        'approval_status'  => 'integer',
+        'hidden'           => 'boolean',
+        'price_per_day'    => 'integer',
         'monthly_discount' => 'integer',
     ];
 
