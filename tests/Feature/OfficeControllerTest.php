@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\Image;
 use App\Models\Office;
 use App\Models\Reservation;
+use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -84,5 +86,44 @@ class OfficeControllerTest extends TestCase
         $response->assertOk();
         $response->assertJsonCount(1, 'data');
         $this->assertEquals($office->id, $response->json('data')[0]['id']);
+    }
+
+    /**
+     * @test
+     */
+    public function itIncludesImagesTagsUser()
+    {
+        $user = User::factory()->create();
+        $tag = Tag::factory()->create();
+        $office = Office::factory()->for($user)->create();
+
+        $office->tags()->attach($tag);
+        $office->images()->create(['path' => 'images.jpg']);
+
+        $response = $this->get('/api/offices');
+
+        $response->assertOk();
+
+        $this->assertIsArray($response->json('data')[0]['tags']);
+        $this->assertIsArray($response->json('data')[0]['images']);
+        $this->assertCount(1, $response->json('data')[0]['tags']);
+        $this->assertCount(1, $response->json('data')[0]['images']);
+        $this->assertEquals($user->id, $response->json('data')[0]['user']['id']);
+    }
+
+    /**
+     * @test
+     */
+    public function itReturnsTheNumberOfActiveReservation()
+    {
+        $office = Office::factory()->create();
+
+        Reservation::factory()->for($office)->create(['status' => Reservation::STATUS_CANCELLED]);
+        Reservation::factory()->for($office)->create(['status' => Reservation::STATUS_ACTIVE]);
+
+        $response = $this->get('/api/offices');
+
+        $response->assertOk();
+        $this->assertEquals(1, $response->json('data')[0]['reservations_count']);
     }
 }
