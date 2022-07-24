@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Office;
+use App\Models\Reservation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -47,7 +48,7 @@ class OfficeControllerTest extends TestCase
     /**
      * @test
      */
-    public function itFiltersOfficeByHost()
+    public function itFiltersOfficeByHostId()
     {
         Office::factory(3)->create();
 
@@ -56,6 +57,28 @@ class OfficeControllerTest extends TestCase
 
         $response = $this->get(
             '/api/offices?host_id=' . $host->id
+        );
+
+        $response->assertOk();
+        $response->assertJsonCount(1, 'data');
+        $this->assertEquals($office->id, $response->json('data')[0]['id']);
+    }
+
+    /**
+     * @test
+     */
+    public function itFiltersOfficeByUserId()
+    {
+        Office::factory(3)->create();
+
+        $user = User::factory()->create();
+        $office = Office::factory()->create();
+
+        Reservation::factory()->for(Office::factory())->create();
+        Reservation::factory()->for($office)->for($user)->create();
+
+        $response = $this->get(
+            '/api/offices?user_id=' . $user->id
         );
 
         $response->assertOk();
